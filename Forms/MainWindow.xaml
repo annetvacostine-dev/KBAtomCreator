@@ -1,0 +1,529 @@
+﻿<Window x:Class="KBAtomCreator.MainWindow"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+        xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+        xmlns:local="clr-namespace:KBAtomCreator"
+        xmlns:atoms="clr-namespace:KBAtomCreator.Atoms"
+        xmlns:desc="clr-namespace:KBAtomCreator.DescriptionAndLocale"
+        xmlns:sys="clr-namespace:System;assembly=mscorlib"
+        mc:Ignorable="d"
+        Title="KB Atom Creator: создай своего юнита v1.3.3"  Height="720" Width="980" MinWidth="980" MinHeight="720">
+    <Window.Resources>
+        <!--<ObjectDataProvider x:Key="AbilityClassValues" MethodName="GetValues" ObjectType="{x:Type sys:Enum}">
+            <ObjectDataProvider.MethodParameters>
+                <x:Type TypeName="desc:AbilityClass"/>
+            </ObjectDataProvider.MethodParameters>
+        </ObjectDataProvider>-->
+
+        <ObjectDataProvider x:Key="abilityActionValues" 
+                        MethodName="GetValues" 
+                        ObjectType="{x:Type sys:Enum}">
+            <ObjectDataProvider.MethodParameters>
+                <x:Type TypeName="atoms:AbilityAction"/>
+            </ObjectDataProvider.MethodParameters>
+        </ObjectDataProvider>
+
+        <ObjectDataProvider x:Key="abilityTemplateValues" 
+                           MethodName="GetValues" 
+                           ObjectType="{x:Type sys:Enum}">
+            <ObjectDataProvider.MethodParameters>
+                <x:Type TypeName="atoms:AbilityTemplate"/>
+            </ObjectDataProvider.MethodParameters>
+        </ObjectDataProvider>
+
+        <!-- Добавляем конвертер для видимости -->
+        <BooleanToVisibilityConverter x:Key="BooleanToVisibilityConverter"/>
+        <Style x:Key="GuideTextBlockStyle" TargetType="TextBlock">
+            <Setter Property="TextWrapping" Value="Wrap"/>
+            <Setter Property="Margin" Value="0,0,0,5"/>
+            <Setter Property="TextAlignment" Value="Justify"/>
+        </Style>
+    </Window.Resources>
+
+    <Grid>
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto" />
+            <!-- меню -->
+            <RowDefinition Height="Auto" />
+            <!-- верхняя панель -->
+            <RowDefinition Height="*" />
+            <!-- TabControl -->
+        </Grid.RowDefinitions>
+
+        <!-- Меню -->
+        <Menu Grid.Row="0" Background="#F0F0F0">
+            <MenuItem Header="_Файл">
+                <MenuItem Header="_Открыть ресурсы" Click="OpenResourcesMenuClick" />
+                <Separator />
+                <MenuItem Header="_Сохранить атом" Click="SaveUnitMenuClick" />
+            </MenuItem>
+            <MenuItem Header="_О программе" Click="AboutMenuClick" />
+        </Menu>
+
+        <!-- Верхняя панель (без фиксированной высоты) -->
+        <Grid Grid.Row="1">
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition/>
+                <ColumnDefinition Width="Auto" MinWidth="311"/>
+            </Grid.ColumnDefinitions>
+
+            <!-- Левая часть -->
+            <StackPanel Grid.Column="0" Orientation="Vertical">
+                <DockPanel Margin="0,0,0,10">
+                    <Label Width="80" VerticalAlignment="Center">
+                        <TextBlock Text="Папка с ресурсами" TextWrapping="Wrap" TextAlignment="Center"/>
+                    </Label>
+                    <TextBox x:Name="DataFolderTextbox" Height="22" AllowDrop="True"
+                         Drop="DataFolderTextbox_Drop" PreviewDragOver="DataFolderTextbox_PreviewDragOver"
+                         LostFocus="DataFolderTextbox_LostFocus" VerticalAlignment="Center"
+                         HorizontalAlignment="Stretch" MinWidth="100"/>
+                    <Button x:Name="OpenDirButton" Content="..." Width="38" Height="22"
+                        Click="OpenDirButton_Click" VerticalAlignment="Center" HorizontalAlignment="Left" Margin="5,0,0,0"/>
+                </DockPanel>
+
+                <DockPanel>
+                    <Label x:Name="labelSearch" Width="80" VerticalAlignment="Center">
+                        <TextBlock Text="Список атомов" TextWrapping="Wrap" TextAlignment="Center"/>
+                    </Label>
+                    <ComboBox x:Name="AtomSearchComboBox" DisplayMemberPath="AtomName" Height="20"
+                          IsEditable="True" SelectionChanged="AtomSearchComboBoxSelectionChanged"
+                          HorizontalAlignment="Left" VerticalAlignment="Center" MinWidth="200" MaxWidth="200"/>
+                    <Label Content="Фильтр:" VerticalAlignment="Center" Margin="10,0,0,0"/>
+                    <ComboBox x:Name="FilterComboBox" Width="120" VerticalAlignment="Center"
+                          SelectionChanged="FilterComboBox_SelectionChanged"
+                          SelectedIndex="0" Margin="5,0,0,0"/>
+                </DockPanel>
+            </StackPanel>
+
+            <!-- Правая часть -->
+            <StackPanel Grid.Column="1" Orientation="Vertical" VerticalAlignment="Center" Margin="10,0,0,0">
+                <Label Content="Название юнита (eng)" Margin="0,0,0,0" HorizontalAlignment="Center"/>
+                <TextBox x:Name="NewUnitTextbox" TextWrapping="Wrap" Text="" Width="120" 
+             VerticalAlignment="Center" Margin="0,0,0,5"
+             ToolTip="Введите название юнита"/>
+                <Button x:Name="SaveUnitButton" Content="Сохранить нового юнита" Click="SaveUnitClick" 
+            Height="32" Width="149" VerticalAlignment="Center"/>
+            </StackPanel>
+        </Grid>
+     
+        <!--****************************Характеристики загруженного атома********************************************-->
+        <TabControl Grid.Row="2" x:Name="tabControl" SelectedIndex="1">
+            <TabItem Header="Характеристики Общие">
+
+                    <Grid Background="#FFE5E5E5">
+                        <ScrollViewer VerticalScrollBarVisibility="Auto">
+                            <StackPanel DataContext="{Binding CurrentAtomInfo}">
+                                <Label Content="Имя атома [AtomName]"/>
+                                <TextBox x:Name="atomNameTextBox" IsReadOnly="True" 
+                 Text="{Binding AtomName, Mode=OneWay}"/>
+
+                                <Label Content="Класс [Class]"/>
+                                <TextBox IsReadOnly="True" Text="{Binding Main.Class, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"/>
+
+                                <Label Content="Основная Модель [Model]"/>
+                                <TextBox IsReadOnly="True" Text="{Binding Main.MainModel, Mode=OneWay, UpdateSourceTrigger=PropertyChanged}"/>
+
+                                <Label Content="Особенности [Features Label]"/>
+                                <TextBox x:Name="txtFeaturesLabel" IsReadOnly="True" 
+                 Text="{Binding ArenaParams.FeaturesLabel, Mode=OneWay}"/>
+
+                                <Label Content="Хинты [Features Hints]"/>
+                                <TextBox x:Name="txtFeaturesHints" IsReadOnly="True"
+                 Text="{Binding ArenaParams.FeaturesHints, Mode=OneWay}"/>
+
+                                <Label Content="Раса [Race]"/>
+                                <TextBox x:Name="txtRace"
+                 Text="{Binding ArenaParams.Race, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"/>
+
+                                <Label Content="Стоимость [Cost]"/>
+                                <TextBox x:Name="txtCost"
+                 Text="{Binding ArenaParams.Cost, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"/>
+
+                                <Label Content="Уровень [Level]"/>
+                                <TextBox x:Name="txtLevel"
+                 Text="{Binding ArenaParams.Level, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"/>
+
+                                <Label Content="Лидерство [Leadership]"/>
+                                <TextBox x:Name="txtLeadership"
+                 Text="{Binding ArenaParams.Leadership, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"/>
+
+                                <Label Content="Атака [Attack]"/>
+                                <TextBox x:Name="txtAttack"
+                 Text="{Binding ArenaParams.Attack, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"/>
+
+                                <Label Content="Защита [Defense]"/>
+                                <TextBox x:Name="txtDefense"
+                 Text="{Binding ArenaParams.Defense, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"/>
+
+                                <Label Content="Усиление при защите [Defenseup]"/>
+                                <TextBox x:Name="txtDefenseup"
+                 Text="{Binding ArenaParams.Defenseup, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"/>
+
+                                <Label Content="Инициатива [Initiative]"/>
+                                <TextBox x:Name="txtInitiative"
+                 Text="{Binding ArenaParams.Initiative, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"/>
+
+                                <Label Content="Скорость [Speed]"/>
+                                <TextBox x:Name="txtSpeed"
+                 Text="{Binding ArenaParams.Speed, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"/>
+
+                                <Label Content="Здоровье [Hitpoint]"/>
+                                <TextBox x:Name="txtHitpoint"
+                 Text="{Binding ArenaParams.Hitpoint, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"/>
+
+                                <Label Content="Крит. Шанс [Krit]"/>
+                                <TextBox x:Name="txtKrit"
+                 Text="{Binding ArenaParams.Krit, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"/>
+
+                                <Label Content="Тип движения [Movetype]"/>
+                                <TextBox x:Name="txtMovetype"
+                 Text="{Binding ArenaParams.Movetype, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"/>
+
+                                <Label Content="Контратака [Hitback]"/>
+                                <TextBox x:Name="txtHitback"
+                 Text="{Binding ArenaParams.Hitback, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"/>
+
+                                <Label Content="Безответный удар [Hitbackprotect]"/>
+                                <TextBox x:Name="txtHitbackprotect"
+                 Text="{Binding ArenaParams.Hitbackprotect, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"/>
+
+                                <Label Content="Атаки [Attacks]"/>
+                                <TextBox x:Name="txtAttacks" 
+                                 Text="{Binding ArenaParams.AttacksText, Mode=OneWay, UpdateSourceTrigger=PropertyChanged}" 
+                                 IsReadOnly="True"/>
+
+                            <Label Content="Постхит атака [Posthitmaster]"/>
+                                <TextBox x:Name="txtPosthitmaster"
+                                 Text="{Binding ArenaParams.Posthitmaster, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"/>
+
+                                <Label Content="Постхит защита [Posthitslave]"/>
+                                <TextBox x:Name="txtPosthitslave"
+                                Text="{Binding ArenaParams.Posthitslave, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"/>
+
+                                <Label Content="Автобой [Autofight]"/>
+                                <TextBox x:Name="txtAutofight"
+                                Text="{Binding ArenaParams.Autofight, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"/>
+
+                                <Label Content="Особенности [Features]"/>
+                                <TextBox x:Name="txtFeatures"
+                                Text="{Binding ArenaParams.Features, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"/>
+
+                                <Label Content="Сопротивления [Resistances]" FontWeight="Bold"/>
+                                <StackPanel Margin="20,0,0,0" DataContext="{Binding ArenaParams.Resistances}">
+                                    <Label Content="Физическое [Physical]"/>
+                                    <TextBox x:Name="txtPhysical"
+                                    Text="{Binding Physical, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"/>
+
+                                    <Label Content="Магическое [Magic]"/>
+                                    <TextBox x:Name="txtMagic"
+                                    Text="{Binding Magic, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"/>
+
+                                    <Label Content="Огненное [Fire]"/>
+                                    <TextBox x:Name="txtFire"
+                                     Text="{Binding Fire, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"/>
+
+                                    <Label Content="Ледяное [Glacial]"/>
+                                    <TextBox x:Name="txtGlacial"
+                                    Text="{Binding Glacial, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"/>
+
+                                    <Label Content="Ядовитое [Poison]"/>
+                                    <TextBox x:Name="txtPoison"
+                                     Text="{Binding Poison, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"/>
+
+                                    <Label Content="Астральное [Astral]"/>
+                                    <TextBox x:Name="txtAstral"
+                                    Text="{Binding Astral, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"/>
+                                </StackPanel>
+                            </StackPanel>
+                        </ScrollViewer>
+
+                    </Grid>
+                </TabItem>
+                <!--****************************Описание********************************************-->
+            <!--****************************Описание********************************************-->
+            <TabItem Header="Описание и способности">
+                <ScrollViewer VerticalScrollBarVisibility="Auto">
+                    <Grid Background="#FFE5E5E5">
+                        <Grid.RowDefinitions>
+                            <RowDefinition Height="Auto"/>
+                            <RowDefinition Height="Auto"/>
+                            <RowDefinition Height="*"/>
+                            <RowDefinition Height="*"/>
+                            <RowDefinition Height="Auto"/>
+                        </Grid.RowDefinitions>
+
+                        <!-- Basic Information -->
+                        <StackPanel Grid.Row="0">
+                            <Label Content="Название (один юнит):"/>
+                            <TextBox x:Name="txtUnitNameOne" Margin="0,0,0,10" TextChanged="txtUnitNameOne_TextChanged"/>
+                            <Label Content="Название (много юнитов)"/>
+                            <TextBox x:Name="txtUnitNameMany" Margin="0,0,0,10"/>
+                        </StackPanel>
+
+                        <!-- Features Section -->
+                        <GroupBox Grid.Row="1" Header="Особенности" Margin="0,0,0,10">
+                            <StackPanel>
+                                <Button Content="Очистить" 
+                            Click="ClearFeaturesClick" 
+                            Margin="0,5" 
+                            Width="150" 
+                            HorizontalAlignment="Right" />
+                                <!-- ScrollViewer убран, ItemsControl без ограничения высоты -->
+                                <ItemsControl x:Name="featuresItemsControl">
+                                    <ItemsControl.ItemTemplate>
+                                        <DataTemplate>
+                                            <Border Margin="0,5" Padding="8" BorderBrush="#D0D0D0" BorderThickness="1" CornerRadius="4" Background="#F8F8F8">
+                                            <Grid Margin="0,5">
+                                                <Grid.RowDefinitions>
+                                                    <RowDefinition Height="Auto"/>
+                                                    <RowDefinition Height="Auto"/>
+                                                </Grid.RowDefinitions>
+                                                <Grid.ColumnDefinitions>
+                                                    <ColumnDefinition Width="Auto"/>
+                                                    <ColumnDefinition Width="1*"/>
+                                                    <ColumnDefinition Width="Auto"/>
+                                                    <ColumnDefinition Width="3*"/>
+                                                    <ColumnDefinition Width="Auto"/>
+                                                </Grid.ColumnDefinitions>
+
+                                                <TextBlock Grid.Row="0" Grid.Column="0" Text="Название:" Margin="0,0,5,0" VerticalAlignment="Center"/>
+                                                <TextBox Grid.Row="0" Grid.Column="1" Text="{Binding Name, UpdateSourceTrigger=PropertyChanged}" 
+                                             Margin="0,0,10,0" FontSize="14" 
+                                             HorizontalAlignment="Stretch" TextWrapping="Wrap" MinWidth="100"/>
+                                                <TextBlock Grid.Row="0" Grid.Column="2" Text="Описание:" Margin="0,0,5,0" VerticalAlignment="Center"/>
+                                                <local:AutoCompleteTextBox Grid.Row="0" Grid.Column="3" 
+                                                               Text="{Binding Description}" 
+                                                               AutoCompleteItems="{Binding DataContext.FeatureAutoCompleteItems, RelativeSource={RelativeSource AncestorType=Window}}"
+                                                               Margin="0,0,10,0" HorizontalAlignment="Stretch" 
+                                                               TextWrapping="Wrap" MinWidth="150"/>
+                                                <Button Grid.Row="0" Grid.Column="4" Content="Удалить" Margin="10,0,0,0"
+                                            Click="RemoveFeatureClick" VerticalAlignment="Center"/>
+
+                                                <TextBlock Grid.Row="1" Grid.Column="0" Text="РесурсноеИмя:" Margin="0,5,5,0" VerticalAlignment="Center"/>
+                                                <TextBox Grid.Row="1" Grid.Column="1" Text="{Binding ResourceName}" Margin="0,5,10,0" 
+                                             HorizontalAlignment="Stretch" TextWrapping="Wrap" MinWidth="100"/>
+                                            </Grid>
+                                            </Border>
+                                        </DataTemplate>
+                                    </ItemsControl.ItemTemplate>
+                                </ItemsControl>
+                                <Button Content="Добавить особенность" Click="AddFeatureClick" Margin="0,5"/>
+                            </StackPanel>
+                        </GroupBox>
+
+                        <!-- Abilities Section -->
+                        <GroupBox Grid.Row="2" Header="Способности" Margin="0,0,0,67" Grid.RowSpan="2">
+                            <GroupBox.Resources>
+                                <ObjectDataProvider x:Key="abilityClassValues" 
+                                        MethodName="GetValues" 
+                                        ObjectType="{x:Type sys:Enum}">
+                                    <ObjectDataProvider.MethodParameters>
+                                        <x:Type TypeName="desc:AbilityClass"/>
+                                    </ObjectDataProvider.MethodParameters>
+                                </ObjectDataProvider>
+                            </GroupBox.Resources>
+
+                            <!-- ScrollViewer убран, ItemsControl без ограничения -->
+                            <!--<ScrollViewer VerticalScrollBarVisibility="Auto">-->
+                                <StackPanel>
+                                    <!-- Новая кнопка Очистить -->
+                                    <Button Content="Очистить" 
+                                            Click="ClearAbilitiesClick" 
+                                            Margin="0,5" 
+                                            Width="150" 
+                                            HorizontalAlignment="Right" />
+                                    <ItemsControl x:Name="abilitiesItemsControl">
+                                        <ItemsControl.ItemTemplate>
+                                            <DataTemplate>
+                                                <Border Margin="0,5" Padding="8" BorderBrush="#D0D0D0" BorderThickness="1" CornerRadius="4" Background="#F8F8F8">
+                                                <Grid Margin="0,5">
+                                                    <Grid.RowDefinitions>
+                                                        <RowDefinition Height="Auto"/>
+                                                        <RowDefinition Height="Auto"/>
+                                                        <RowDefinition Height="Auto"/>
+                                                    </Grid.RowDefinitions>
+                                                    <Grid.ColumnDefinitions>
+                                                        <ColumnDefinition Width="Auto"/>
+                                                        <ColumnDefinition Width="*"/>
+                                                        <ColumnDefinition Width="Auto"/>
+                                                        <ColumnDefinition Width="2*"/>
+                                                        <ColumnDefinition Width="Auto"/>
+                                                    </Grid.ColumnDefinitions>
+
+                                                    <TextBlock Grid.Row="0" Grid.Column="0" Text="Название:" Margin="0,0,5,0" VerticalAlignment="Center"/>
+                                                    <TextBox Grid.Row="0" Grid.Column="1" Text="{Binding Name, UpdateSourceTrigger=PropertyChanged}" 
+                                                 Margin="0,0,10,0" HorizontalAlignment="Stretch" 
+                                                 TextWrapping="Wrap" MinWidth="100"/>
+                                                    <TextBlock Grid.Row="0" Grid.Column="2" Text="Описание:" Margin="0,0,5,0" VerticalAlignment="Center"/>
+                                                    <local:AutoCompleteTextBox Grid.Row="0" Grid.Column="3" 
+                                                                   Text="{Binding Description}" 
+                                                                   AutoCompleteItems="{Binding DataContext.AbilityAutoCompleteItems, RelativeSource={RelativeSource AncestorType=Window}}"
+                                                                   Margin="0,0,10,0" HorizontalAlignment="Stretch" 
+                                                                   TextWrapping="Wrap" MinWidth="150"/>
+                                                    <Button Grid.Row="0" Grid.Column="4" Content="Удалить" Margin="10,0,0,0"
+                                                Click="RemoveAbilityClick" VerticalAlignment="Center"/>
+
+                                                    <TextBlock Grid.Row="1" Grid.Column="0" Text="РесурсноеИмя:" Margin="0,5,5,0" VerticalAlignment="Center"/>
+                                                    <TextBox Grid.Row="1" Grid.Column="1" Text="{Binding ResourceName, UpdateSourceTrigger=PropertyChanged}" 
+                                                 Margin="0,5,10,0" HorizontalAlignment="Stretch" 
+                                                 TextWrapping="Wrap" MinWidth="100"/>
+                                                    <TextBlock Grid.Row="1" Grid.Column="2" Text="Действие:" Margin="0,5,5,0" VerticalAlignment="Center"/>
+                                                    <ComboBox Grid.Row="1" Grid.Column="3" 
+                                                      ItemsSource="{Binding Source={StaticResource abilityActionValues}}"
+                                                      SelectedItem="{Binding AbilityAction}"
+                                                      Margin="0,5,10,0" HorizontalAlignment="Stretch" MinWidth="150"/>
+
+                                                    <Grid Grid.Row="2" Grid.Column="0" Grid.ColumnSpan="5" 
+                                              Visibility="{Binding IsGenerateLua, Converter={StaticResource BooleanToVisibilityConverter}}"
+                                                            Margin="0,5,0,0">
+                                                        <Grid.ColumnDefinitions>
+                                                            <ColumnDefinition Width="Auto"/>
+                                                            <ColumnDefinition Width="*"/>
+                                                            <ColumnDefinition Width="Auto"/>
+                                                            <ColumnDefinition Width="2*"/>
+                                                            <ColumnDefinition Width="Auto"/>
+                                                        </Grid.ColumnDefinitions>
+                                                        <TextBlock Grid.Column="0" Text="Шаблон:" Margin="0,0,5,0" VerticalAlignment="Center"/>
+                                                        <ComboBox Grid.Column="1" Grid.ColumnSpan="3"
+                                                      ItemsSource="{Binding Source={StaticResource abilityTemplateValues}}"
+                                                      SelectedItem="{Binding AbilityTemplate}"
+                                                      Margin="0,0,10,0" HorizontalAlignment="Stretch" MinWidth="150"/>
+                                                    </Grid>
+                                                </Grid>
+                                                </Border>
+                                            </DataTemplate>
+                                        </ItemsControl.ItemTemplate>
+                                    </ItemsControl>
+                                    <Button Content="Добавить способность" Click="AddAbilityClick" Margin="0,5"/>
+                                </StackPanel>
+                            <!--</ScrollViewer>-->
+                        </GroupBox>
+                    </Grid>
+                </ScrollViewer>
+            </TabItem>
+            <!--****************************Результьат  сохранения********************************************-->
+                <TabItem Header="Результаты" x:Name="tabResults">
+                    <Grid Margin="10">
+                        <Grid.RowDefinitions>
+                            <RowDefinition Height="Auto"/>
+                            <RowDefinition Height="*"/>
+                        </Grid.RowDefinitions>
+
+                        <!-- Панель управления -->
+                        <StackPanel Grid.Row="0" Orientation="Horizontal" Margin="0,0,0,10">
+                            <Button Content="Выбрать папку" Click="SelectResultsFolder_Click" 
+                                Margin="0,0,10,0" Padding="10,5"/>
+                            <Button Content="Обновить" Click="RefreshResults_Click" 
+                                Margin="0,0,10,0" Padding="10,5"/>
+                            <TextBlock x:Name="txtCurrentFolder" VerticalAlignment="Center" 
+                                   Margin="10,0,0,0" FontStyle="Italic"/>             
+                            <Button Content="Открыть в проводнике" Click="OpenInExplorer_Click" 
+                    Margin="0,0,10,0" Padding="10,5"/>
+                        </StackPanel>
+
+                        <!-- Список файлов -->
+                        <ListView Grid.Row="1" x:Name="resultsListView" 
+                              MouseDoubleClick="ResultsListView_MouseDoubleClick">
+                            <ListView.View>
+                                <GridView>
+                                    <GridViewColumn Header="File Name" Width="200" 
+                                                DisplayMemberBinding="{Binding Name}"/>
+                                    <GridViewColumn Header="Size" Width="100"
+                                                DisplayMemberBinding="{Binding Size}"/>
+                                    <GridViewColumn Header="Modified" Width="150"
+                                                DisplayMemberBinding="{Binding Modified}"/>
+                                    <GridViewColumn Header="Full Path" Width="400"
+                                                DisplayMemberBinding="{Binding FullPath}"/>
+                                </GridView>
+                            </ListView.View>
+                        </ListView>
+                        
+                        
+                    </Grid>
+                </TabItem>
+                <!--****************************Руководство********************************************-->
+                <TabItem Header="Руководство пользования">
+                    <ScrollViewer VerticalScrollBarVisibility="Auto">
+                        <Grid Margin="15">
+                            <Grid.RowDefinitions>
+                                <RowDefinition Height="Auto"/>
+                                <RowDefinition Height="Auto"/>
+                                <RowDefinition Height="Auto"/>
+                            </Grid.RowDefinitions>
+
+                            <!-- Подготовка к работе -->
+                            <GroupBox Grid.Row="0" Header="Подготовка к работе" Margin="0,0,0,15">
+                                <StackPanel Margin="10">
+                                    <TextBlock TextWrapping="Wrap" Margin="0,0,0,10">
+                        <Run Text="1. (пункт выполняется один раз): Распакуйте ресурсы king's bounty в отдельную папку. Или скачайте их по ссылке "/>
+                        <Hyperlink NavigateUri="https://disk.yandex.ru/d/tDYFrtjvQQlMlg" 
+                                   RequestNavigate="Hyperlink_RequestNavigate">
+                            (ресурсы на диске)
+                        </Hyperlink>
+                        <Run Text="."/>
+                                    </TextBlock>
+                                    <TextBlock TextWrapping="Wrap">
+                                    2. Выберите папку с ресурсами King's Bounty перетащив исходную папку или нажав на &quot;...&quot;. 
+                                    Настроенная папка сохранится и будет выбрана при следующем запуске." 
+                               
+                                    </TextBlock>
+                                </StackPanel>
+                            </GroupBox>
+
+                            <!-- Основная часть -->
+                            <GroupBox Grid.Row="1" Header="Основная часть" Margin="0,0,0,15">
+                                <StackPanel Margin="10">
+                                    <TextBlock Text="1. Выберите исходного юнита из списка &quot;Список атомов&quot;." 
+                               TextWrapping="Wrap" Margin="0,0,0,5"/>
+                                    <TextBlock TextWrapping="Wrap" Margin="0,0,0,5">
+                        2. На вкладке общие &quot;Характеристики&quot; Можно менять исходные характеристики. 
+                        Обратите внимание, что не все исходные характеристики можно менять! 
+                        Часть из старых характеристик не пойдёт в новый сохраненный атом.
+                                    </TextBlock>
+                                    <TextBlock TextWrapping="Wrap" Margin="0,0,0,5">
+                        3. На вкладке &quot;Описание и способности&quot; заполните "Название существа"
+                        (когда оно одно в армии и когда несколько). Добавьте способности и таланты.
+                                    </TextBlock>
+                                    <TextBlock TextWrapping="Wrap" Margin="0,0,0,5">
+                        4. Нажмите &quot;Сохранить нового юнита&quot; для сохранения результатов и выберите каталог! 
+                        Автоматически сгенерированное название получившегося атома можно изменить.
+                                    </TextBlock>
+                                    <TextBlock TextWrapping="Wrap">
+                        5. После этого откроется вкладка с результатами где вы можете смотреть, 
+                        а также открывать полученные файлы. Вы также можете открыть папку с результатами в проводнике.
+                                    </TextBlock>
+                                </StackPanel>
+                            </GroupBox>
+
+                            <!-- Дополнительная информация -->
+                            <GroupBox Grid.Row="2" Header="Дополнительная информация">
+                                <StackPanel Margin="10">
+                                    <TextBlock TextWrapping="Wrap" Margin="0,0,0,5">
+                        • Для редактирования характеристик выберите соответствующий атом из списка.
+                                    </TextBlock>
+                                    <TextBlock TextWrapping="Wrap" Margin="0,0,0,5">
+                        • Все изменения сохраняются в отдельные файлы, оригинальные файлы игры не изменяются.
+                                    </TextBlock>
+                                    <TextBlock TextWrapping="Wrap" Margin="0,0,0,5">
+                        • После сохранения вы можете использовать созданного юнита в модификациях игры.
+                                    </TextBlock>
+                                    <TextBlock TextWrapping="Wrap">
+                        • Для применения изменений потребуется перезапуск игры.
+                                    </TextBlock>
+                                </StackPanel>
+                            </GroupBox>
+                        </Grid>
+                    </ScrollViewer>
+                </TabItem>
+
+            </TabControl>
+
+      
+
+
+
+    </Grid>
+</Window>
+    
+

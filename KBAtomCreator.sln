@@ -1,0 +1,25 @@
+﻿
+Microsoft Visual Studio Solution File, Format Version 12.00
+# Visual Studio Version 17
+VisualStudioVersion = 17.5.33516.290
+MinimumVisualStudioVersion = 10.0.40219.1
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "KBAtomCreator", "KBAtomCreator.csproj", "{AF3D4E4E-0237-4B25-89FF-A34CD3E3FE8F}"
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|Any CPU = Debug|Any CPU
+		Release|Any CPU = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{AF3D4E4E-0237-4B25-89FF-A34CD3E3FE8F}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{AF3D4E4E-0237-4B25-89FF-A34CD3E3FE8F}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{AF3D4E4E-0237-4B25-89FF-A34CD3E3FE8F}.Release|Any CPU.ActiveCfg = Debug|Any CPU
+		{AF3D4E4E-0237-4B25-89FF-A34CD3E3FE8F}.Release|Any CPU.Build.0 = Debug|Any CPU
+	EndGlobalSection
+	GlobalSection(SolutionProperties) = preSolution
+		HideSolutionNode = FALSE
+	EndGlobalSection
+	GlobalSection(ExtensibilityGlobals) = postSolution
+		SolutionGuid = {E03FD214-4D73-4658-93C7-6C84CE754B8D}
+	EndGlobalSection
+EndGlobal
